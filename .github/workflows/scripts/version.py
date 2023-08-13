@@ -1,29 +1,33 @@
-### Script by 🌟 Jojo#6430
-src = '.'
+### Script by @jojofr.
 
-with open(f'{src}/mod.hjson', 'r+') as fileMod:
-    lineMod = fileMod.readlines()
-    version = lineMod[4].split() #Get the line with version value
-    version = version[1].replace('"', '').replace(',', '') #Get the version number and remove some values
+def modUpdate():
+    with open('mod.json', 'r+', encoding="utf8") as modFile:
+        modLines = modFile.readlines()
 
-    if version.endswith('dev'): #Verify if it ends with 'dev'
-        version = version.removesuffix('dev')
-        suffix = 'dev' #Keep it for later
-    else: #If not 'dev', then 'release'
-        print(f'Not a dev build, no auto incrementation of the build version.')
-        quit() #Stop the program
+        modFile.seek(0)
+        modFile.truncate() #Remove all data from the files
+        for num, line in enumerate(modLines): 
+            if line.strip().startswith("\"version\":"):
+                versionLine = modLines[num].split()
+                # Yes it's a mess. Yes it's unreadble. Yes I don't care.
+                modLines[num] = "    " + versionLine[0] + " " + versionLine[1].split('dev.')[0] + 'dev.' + str(int(versionLine[1].split('dev.')[1].strip(',').strip('"')) + 1) + "\",\n"    
+            modFile.write(modLines[num]) #Rewrite the updated value
+        modFile.close()
+
+def gradleUpdate():
+    with open('build.gradle', 'r+', encoding="utf8") as gradleFile:
+        gradleLines = gradleFile.readlines()
+
+        gradleFile.seek(0)
+        gradleFile.truncate() #Remove all data from the files
+        for num, line in enumerate(gradleLines): 
+            if line.strip().startswith("version"):
+                versionLine = gradleLines[num].split()
+                # Yes it's a mess. Yes it's unreadble. Yes I don't care.
+                gradleLines[num] = versionLine[0] + " " + versionLine[1].split('dev.')[0] + 'dev.' + str(int(versionLine[1].split('dev.')[1].strip("'")) + 1) + "'\n"    
+            gradleFile.write(gradleLines[num]) #Rewrite the updated value
+        gradleFile.close()
     
-    actualVersion = ''
-    for i in range(4): #Remove the 4 first values (x.x.)
-        actualVersion = actualVersion + version[i]
-    version = version.removeprefix(actualVersion)
-    version = int(version) + 1 #Add 1 to x.x.X
-
-    newVersion = actualVersion + str(version) + suffix #Recompose the updated string
-    
-    lineMod[4] = f'    version: "{newVersion}",\n' #Change the version in the list
-    fileMod.seek(0)
-    fileMod.truncate() #Remove all data
-    for lineNum, line in enumerate(lineMod):
-        fileMod.write(lineMod[lineNum]) #Write one by one the value again
-    fileMod.close()
+modUpdate()
+# Works but not sure if I want to use it.
+# gradleUpdate()
